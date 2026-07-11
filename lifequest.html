@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifeQuest — Level Up For Real</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d0f16; --panel:#171a24; --panel-2:#1e2230; --line:#2a2e3d;
+    --text:#e7e9f0; --muted:#8b90a8;
+    --accent:#7c5cff; --accent-dim:#7c5cff33;
+    --success:#3ddc97; --danger:#ff6b6b;
+    --gold:#e8b34c; --bronze:#c17a4a; --silver:#b9c0d4; --platinum:#6fd8d0; --diamond:#6fb3ff; --legend:#ff7ce0;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(1200px 600px at 50% -10%, #1b1f2f 0%, var(--bg) 55%);
+    color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; -webkit-font-smoothing:antialiased;
+  }
+  .app{max-width:640px;margin:0 auto;padding:18px 16px 100px;}
+
+  /* ---------- REMINDER BANNER ---------- */
+  .banner{
+    display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#3a2740,#241c33);
+    border:1px solid #6b4a8a;border-radius:14px;padding:11px 14px;margin-bottom:14px;
+    font-size:13px;animation:slideDown .4s ease;
+  }
+  @keyframes slideDown{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+  .banner-icon{font-size:18px;flex:none;}
+  .banner-text{flex:1;line-height:1.3;}
+  .banner-close{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;flex:none;}
+
+  /* ---------- HEADER ---------- */
+  .header{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:18px;padding:16px 18px;position:relative;overflow:hidden;}
+  .header::before{content:'';position:absolute;inset:0;background:radial-gradient(400px 200px at 90% -20%, var(--accent-dim), transparent 70%);pointer-events:none;}
+  .header-top{display:flex;align-items:center;gap:12px;}
+  .avatar-btn{width:60px;height:60px;flex:none;border-radius:14px;border:2px solid var(--line);background:#0b0d14;cursor:pointer;padding:2px;position:relative;}
+  .avatar-btn svg{width:100%;height:100%;}
+  .id-block{flex:1;min-width:0;}
+  .rank-name{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:18px;display:flex;align-items:center;gap:8px;}
+  .rank-tag{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+  .header-actions{display:flex;gap:8px;align-items:center;flex:none;}
+  .icon-btn{width:34px;height:34px;border-radius:10px;background:#0b0d14;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;position:relative;}
+  .icon-btn .dot{position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:var(--danger);border:2px solid var(--panel);}
+  .streak-row{display:flex;align-items:center;gap:14px;margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:12.5px;}
+  .streak{display:flex;align-items:center;gap:5px;font-weight:700;color:var(--gold);}
+  .freeze{display:flex;align-items:center;gap:5px;color:var(--diamond);}
+  .xp-row{margin-top:12px;}
+  .xp-labels{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:6px;}
+  .xp-track{height:10px;border-radius:6px;background:#0b0d14;border:1px solid var(--line);overflow:hidden;}
+  .xp-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--accent),#a78bff);transition:width .5s cubic-bezier(.22,1,.36,1);}
+
+  /* ---------- HEATMAP ---------- */
+  .heatmap{display:flex;gap:5px;margin-top:16px;justify-content:space-between;}
+  .heat-cell{flex:1;aspect-ratio:1;border-radius:6px;background:#0b0d14;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+  .heat-cell.active{background:var(--success);border-color:var(--success);color:#0d0f16;font-weight:700;}
+  .heat-cell.today{box-shadow:0 0 0 2px var(--accent);}
+
+  /* ---------- MASCOT ---------- */
+  .mascot-bar{display:flex;align-items:flex-end;gap:10px;margin:16px 0;cursor:pointer;}
+  .mascot-svg{width:52px;height:52px;flex:none;}
+  .speech{background:var(--panel);border:1px solid var(--line);border-radius:14px;border-bottom-left-radius:4px;padding:10px 13px;font-size:13px;line-height:1.35;flex:1;position:relative;}
+
+  /* ---------- TABS ---------- */
+  .tabs{display:flex;gap:8px;overflow-x:auto;margin:10px 0 14px;padding-bottom:2px;scrollbar-width:none;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{flex:none;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s ease;font-family:'Inter',sans-serif;}
+  .tab.active{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim);}
+  .tab.awards{background:var(--panel);}
+  .tab.awards.active{background:var(--gold);border-color:var(--gold);color:#241c00;}
+
+  /* ---------- TASK LIST ---------- */
+  .cat-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .cat-title{font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:16px;}
+  .cat-progress{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);}
+  .task{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;transition:border-color .15s;}
+  .task.done{border-color:var(--success);background:linear-gradient(0deg, #12261e, var(--panel));}
+  .check{width:24px;height:24px;flex:none;border-radius:7px;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;background:#0b0d14;}
+  .check.done{background:var(--success);border-color:var(--success);}
+  .check svg{width:14px;height:14px;opacity:0;transform:scale(.5);transition:all .15s;}
+  .check.done svg{opacity:1;transform:scale(1);}
+  .task-text{flex:1;font-size:14.5px;line-height:1.3;}
+  .task.done .task-text{color:var(--muted);text-decoration:line-through;}
+  .diff-tag{font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:700;padding:3px 7px;border-radius:6px;flex:none;letter-spacing:.4px;}
+  .diff-easy{background:#3ddc9722;color:var(--success);}
+  .diff-medium{background:#e8b34c22;color:var(--gold);}
+  .diff-hard{background:#ff6b6b22;color:var(--danger);}
+  .task-del{flex:none;width:22px;height:22px;border:none;background:none;color:var(--muted);cursor:pointer;opacity:.5;font-size:16px;line-height:1;}
+  .task-del:hover{opacity:1;color:var(--danger);}
+  .empty-state{text-align:center;padding:30px 10px;color:var(--muted);font-size:13.5px;}
+  .add-row{display:flex;gap:8px;margin-top:12px;}
+  .add-input{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--text);font-size:14px;font-family:'Inter',sans-serif;}
+  .add-input:focus{outline:none;border-color:var(--accent);}
+  .diff-select{background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:12px;padding:0 8px;}
+  .add-btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:0 16px;font-weight:700;font-size:18px;cursor:pointer;flex:none;}
+  .add-btn:active{transform:scale(.95);}
+
+  /* ---------- ACHIEVEMENTS GRID ---------- */
+  .awards-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .award{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 8px;text-align:center;opacity:.35;filter:grayscale(1);}
+  .award.unlocked{opacity:1;filter:none;border-color:var(--gold);}
+  .award-icon{font-size:26px;}
+  .award-name{font-size:11px;font-weight:700;margin-top:6px;font-family:'Chakra Petch',sans-serif;}
+  .award-desc{font-size:9.5px;color:var(--muted);margin-top:2px;line-height:1.2;}
+
+  /* ---------- MODAL ---------- */
+  .modal-overlay{position:fixed;inset:0;background:rgba(6,7,12,.75);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;animation:fadeIn .2s ease;}
+  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  .modal{background:var(--panel-2);border:1px solid var(--line);border-radius:18px;padding:22px;max-width:400px;width:100%;max-height:85vh;overflow-y:auto;}
+  .modal h2{font-family:'Chakra Petch',sans-serif;margin:0 0 14px;font-size:18px;}
+  .modal-close{position:sticky;top:0;float:right;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;}
+  .swatch-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+  .swatch{width:34px;height:34px;border-radius:10px;cursor:pointer;border:2px solid transparent;display:flex;align-items:center;justify-content:center;font-size:15px;background:var(--panel);color:var(--muted);}
+  .swatch.color-swatch{border:2px solid var(--line);}
+  .swatch.selected{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-dim);}
+  .swatch.locked{opacity:.3;cursor:not-allowed;}
+  .field-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:700;margin:14px 0 8px;font-family:'JetBrains Mono',monospace;}
+  .avatar-preview{width:130px;height:130px;margin:0 auto 8px;border-radius:22px;background:#0b0d14;border:1px solid var(--line);padding:8px;}
+  .modal-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:13px;font-weight:700;font-size:14px;cursor:pointer;margin-top:16px;}
+  .time-input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px;color:var(--text);font-size:15px;font-family:'JetBrains Mono',monospace;margin-bottom:10px;}
+  .reminder-status{font-size:12px;color:var(--muted);line-height:1.5;margin-top:10px;}
+
+  /* ---------- LEVEL UP ---------- */
+  .levelup-overlay{position:fixed;inset:0;background:rgba(6,7,12,.85);display:flex;align-items:center;justify-content:center;z-index:60;}
+  .levelup-card{text-align:center;animation:popIn .5s cubic-bezier(.22,1.4,.36,1);}
+  @keyframes popIn{from{transform:scale(.5);opacity:0;}to{transform:scale(1);opacity:1;}}
+  .levelup-card .big{font-family:'Chakra Petch',sans-serif;font-size:42px;font-weight:700;color:var(--gold);text-shadow:0 0 30px var(--gold);}
+  .levelup-card .sub{font-size:15px;color:var(--muted);margin-top:8px;}
+  .confetti-piece{position:fixed;top:-20px;z-index:70;border-radius:2px;pointer-events:none;}
+
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--panel-2);border:1px solid var(--accent);color:var(--text);padding:10px 18px;border-radius:999px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;opacity:0;transition:all .3s cubic-bezier(.22,1,.36,1);pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:20;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .loading{text-align:center;padding:60px 0;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:13px;}
+  .reset-link{display:block;text-align:center;margin-top:26px;color:var(--muted);font-size:12px;cursor:pointer;text-decoration:underline;opacity:.6;}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="loading" id="loadingMsg">Loading your quest log…</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+
+  const CATEGORIES = [
+    { id:'studies',  label:'Studies',    icon:'📚' },
+    { id:'workout',  label:'Workout',    icon:'🏋️' },
+    { id:'social',   label:'Social',     icon:'👥' },
+    { id:'sleep',    label:'Discipline', icon:'🌙' },
+    { id:'skill',    label:'Skill',      icon:'🎯' },
+  ];
+  const DIFF_XP = { easy: 10, medium: 20, hard: 35 };
+  const RANKS = [
+    { name:'Bronze',   min:1,  color:'var(--bronze)'   },
+    { name:'Silver',   min:5,  color:'var(--silver)'   },
+    { name:'Gold',     min:10, color:'var(--gold)'     },
+    { name:'Platinum', min:15, color:'var(--platinum)' },
+    { name:'Diamond',  min:20, color:'var(--diamond)'  },
+    { name:'Legend',   min:25, color:'var(--legend)'   },
+  ];
+  const AVATAR_OPTS = {
+    skin:['#f2d3b3','#e0ac69','#c68642','#8d5524','#5c3317'],
+    hair:['bald','short','long','mohawk','curly'],
+    hairColor:['#241a14','#7a4a2b','#d4a017','#b23b3b','#5a5a5a'],
+    eyes:['normal','happy','cool'],
+    mouth:['smile','grin','neutral'],
+    outfit:['#7c5cff','#3ddc97','#e8b34c','#ff6b6b','#6fb3ff'],
+    accessory:['none','glasses','headphones','crown'],
+  };
+  const ACCESSORY_UNLOCK = { none:0, glasses:1, headphones:2, crown:4 }; // rank index required
+
+  const ACHIEVEMENTS = [
+    { id:'first_step', name:'First Step', desc:'Complete 1 task', icon:'👣', check:s=>s.stats.totalCompleted>=1 },
+    { id:'streak3', name:'3-Day Streak', desc:'3 days in a row', icon:'🔥', check:s=>s.profile.longestStreak>=3 },
+    { id:'streak7', name:'Week Warrior', desc:'7 day streak', icon:'⚡', check:s=>s.profile.longestStreak>=7 },
+    { id:'streak30', name:'Unstoppable', desc:'30 day streak', icon:'🌋', check:s=>s.profile.longestStreak>=30 },
+    { id:'level5', name:'Rising Star', desc:'Reach level 5', icon:'⭐', check:s=>levelFromXP(s.profile.totalXP).level>=5 },
+    { id:'level10', name:'Gold Rank', desc:'Reach level 10', icon:'🏆', check:s=>levelFromXP(s.profile.totalXP).level>=10 },
+    { id:'century', name:'Century Club', desc:'Earn 100 XP', icon:'💯', check:s=>s.profile.totalXP>=100 },
+    { id:'allrounder', name:'All-Rounder', desc:'All 5 categories in 1 day', icon:'🎖️', check:s=>dayHasAllCategories(s, todayStr()) },
+    { id:'builder', name:'Quest Builder', desc:'Add 5 custom tasks', icon:'🧩', check:s=>s.stats.tasksAdded>=5 },
+  ];
+
+  const MASCOT_LINES = {
+    zero_early:["Ready when you are — pick a quest to start today.","Your quest log is open. What's first?"],
+    zero_late:["Don't lose your streak — one quick task keeps it alive!","Still time today. Even an easy one counts."],
+    some_done:["Nice work — keep the momentum going.","You're on a roll today!"],
+    day_cleared:["Today's a win. Rest easy.","Solid effort today — see you tomorrow."],
+    streak_high:["That streak is looking serious. Respect.","You're building something real here."],
+  };
+
+  const STORAGE_KEY = 'lifequest-state-v2';
+  let state = null;
+  let activeCat = 'studies';
+  let mascotLineIdx = 0;
+
+  function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function dateStrOffset(n){ const d=new Date(); d.setDate(d.getDate()+n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function yesterdayStr(){ return dateStrOffset(-1); }
+  function uid(){ return Math.random().toString(36).slice(2,10); }
+
+  function defaultState(){
+    return {
+      profile: {
+        totalXP:0, streak:0, longestStreak:0, lastCompletionDate:null,
+        streakFreezes:0, lastFreezeAwardWeek:0,
+        avatar:{ skin:AVATAR_OPTS.skin[0], hair:'short', hairColor:AVATAR_OPTS.hairColor[0], eyes:'normal', mouth:'smile', outfit:AVATAR_OPTS.outfit[0], accessory:'none' },
+        reminderTime:'20:00', remindersEnabled:false, bannerDismissedDate:null,
+        achievements:[]
+      },
+      stats:{ totalCompleted:0, tasksAdded:0 },
+      templates: [
+        {id:uid(), category:'studies', text:'Read 20 pages', difficulty:'easy'},
+        {id:uid(), category:'studies', text:'Focused study session (1hr)', difficulty:'medium'},
+        {id:uid(), category:'workout', text:'20 min walk', difficulty:'easy'},
+        {id:uid(), category:'workout', text:'Full workout', difficulty:'hard'},
+        {id:uid(), category:'social', text:'Call a friend or family member', difficulty:'easy'},
+        {id:uid(), category:'social', text:'Meet someone in person', difficulty:'medium'},
+        {id:uid(), category:'sleep', text:'Lights out by target bedtime', difficulty:'medium'},
+        {id:uid(), category:'sleep', text:'No phone 1hr before bed', difficulty:'easy'},
+        {id:uid(), category:'skill', text:'Practice your skill (30 min)', difficulty:'medium'},
+      ],
+      logs: {}
+    };
+  }
+
+  function migrate(s){
+    // fill in any missing fields for safety across versions
+    const d = defaultState();
+    s.profile = Object.assign({}, d.profile, s.profile||{});
+    s.profile.avatar = Object.assign({}, d.profile.avatar, (s.profile&&s.profile.avatar)||{});
+    s.stats = Object.assign({}, d.stats, s.stats||{});
+    if(!s.templates) s.templates = d.templates;
+    if(!s.logs) s.logs = {};
+    return s;
+  }
+
+  function ensureToday(){
+    const t = todayStr();
+    if(!state.logs[t]) state.logs[t] = { completedIds:[], custom:[] };
+  }
+
+  async function loadState(){
+    try{
+      const res = await window.storage.get(STORAGE_KEY, false);
+      if(res && res.value) return migrate(JSON.parse(res.value));
+    }catch(e){}
+    return defaultState();
+  }
+  async function saveState(){
+    try{ await window.storage.set(STORAGE_KEY, JSON.stringify(state), false); }
+    catch(e){ console.error('save failed', e); }
+  }
+
+  function xpForLevel(level){ return 40 + (level-1)*22; }
+  function levelFromXP(xp){
+    let level=1, remaining=xp, need=xpForLevel(1);
+    while(remaining>=need){ remaining-=need; level+=1; need=xpForLevel(level); }
+    return { level, into:remaining, need };
+  }
+  function rankIndexForLevel(level){
+    let idx=0;
+    for(let i=0;i<RANKS.length;i++){ if(level>=RANKS[i].min) idx=i; }
+    return idx;
+  }
+  function rankForLevel(level){ return RANKS[rankIndexForLevel(level)]; }
+  function nextRank(level){ for(const rk of RANKS){ if(level<rk.min) return rk; } return null; }
+
+  function dayHasAllCategories(s, dateStr){
+    const log = s.logs[dateStr];
+    if(!log) return false;
+    const catsHit = new Set();
+    log.completedIds.forEach(id=>{ const t=s.templates.find(x=>x.id===id); if(t) catsHit.add(t.category); });
+    log.custom.forEach(c=>{ if(c.done) catsHit.add(c.category); });
+    return CATEGORIES.every(c=>catsHit.has(c.id));
+  }
+
+  function dayDoneCount(dateStr){
+    const log = state.logs[dateStr];
+    if(!log) return 0;
+    return log.completedIds.length + log.custom.filter(x=>x.done).length;
+  }
+
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(()=>t.classList.remove('show'), 1800);
+  }
+
+  function fireConfetti(){
+    const colors = ['#7c5cff','#3ddc97','#e8b34c','#ff6b6b','#6fb3ff','#ff7ce0'];
+    for(let i=0;i<44;i++){
+      const p = document.createElement('div');
+      p.className='confetti-piece';
+      const size = 6+Math.random()*6;
+      p.style.width=size+'px'; p.style.height=(size*1.6)+'px';
+      p.style.background = colors[Math.floor(Math.random()*colors.length)];
+      p.style.left = Math.random()*100+'vw';
+      const duration = 1.8+Math.random()*1.4;
+      const rotate = Math.random()*720-360;
+      p.style.transition = `transform ${duration}s cubic-bezier(.2,.6,.4,1), opacity ${duration}s linear`;
+      document.body.appendChild(p);
+      requestAnimationFrame(()=>{
+        p.style.transform = `translateY(${window.innerHeight+40}px) rotate(${rotate}deg)`;
+        p.style.opacity = '0.15';
+      });
+      setTimeout(()=>p.remove(), duration*1000+100);
+    }
+  }
+
+  function checkAchievements(){
+    const newly = [];
+    ACHIEVEMENTS.forEach(a=>{
+      if(!state.profile.achievements.includes(a.id) && a.check(state)){
+        state.profile.achievements.push(a.id);
+        newly.push(a);
+      }
+    });
+    return newly;
+  }
+
+  function checkStreakOnLoad(){
+    const last = state.profile.lastCompletionDate;
+    const y = yesterdayStr();
+    const t = todayStr();
+    if(!last || last===t || last===y) return; // fine, nothing missed yet (or already handled)
+    // there's a gap — figure out how many days were skipped between last and yesterday
+    const lastDate = new Date(last);
+    const yDate = new Date(y);
+    const gapDays = Math.round((yDate - lastDate) / 86400000); // days missed
+    if(gapDays<=0) return;
+    if(gapDays===1 && state.profile.streakFreezes>0){
+      state.profile.streakFreezes -= 1;
+      state.profile.lastCompletionDate = y; // treat as if covered, still need today to continue
+      showToast('❄️ Streak Freeze used — your streak survived!');
+    } else {
+      state.profile.streak = 0;
+    }
+  }
+
+  function maybeAwardFreeze(){
+    // award 1 freeze for every 7-day block of longestStreak reached, max banked 2
+    const blocksEarned = Math.floor(state.profile.longestStreak/7);
+    if(blocksEarned > state.profile.lastFreezeAwardWeek){
+      state.profile.lastFreezeAwardWeek = blocksEarned;
+      if(state.profile.streakFreezes < 2){
+        state.profile.streakFreezes += 1;
+        showToast('❄️ Earned a Streak Freeze!');
+      }
+    }
+  }
+
+  function allTasksForToday(cat){
+    const t = todayStr();
+    const log = state.logs[t];
+    const templates = state.templates.filter(x=>x.category===cat).map(x=>({
+      id:x.id, text:x.text, difficulty:x.difficulty, custom:false, done: log.completedIds.includes(x.id)
+    }));
+    const customs = log.custom.filter(x=>x.category===cat).map(x=>({
+      id:x.id, text:x.text, difficulty:x.difficulty, custom:true, done:x.done
+    }));
+    return [...templates, ...customs];
+  }
+
+  function toggleTask(cat, id, isCustom){
+    const t = todayStr();
+    const log = state.logs[t];
+    let xpDelta = 0, nowDone = false, diff;
+
+    if(isCustom){
+      const item = log.custom.find(x=>x.id===id);
+      item.done = !item.done; nowDone = item.done; diff = item.difficulty;
+      xpDelta = (item.done?1:-1) * DIFF_XP[diff];
+    } else {
+      const idx = log.completedIds.indexOf(id);
+      const tmpl = state.templates.find(x=>x.id===id);
+      diff = tmpl.difficulty;
+      if(idx===-1){ log.completedIds.push(id); nowDone=true; xpDelta=DIFF_XP[diff]; }
+      else { log.completedIds.splice(idx,1); nowDone=false; xpDelta=-DIFF_XP[diff]; }
+    }
+
+    const prevLevel = levelFromXP(state.profile.totalXP).level;
+    state.profile.totalXP = Math.max(0, state.profile.totalXP + xpDelta);
+    if(nowDone) state.stats.totalCompleted += 1; else state.stats.totalCompleted = Math.max(0, state.stats.totalCompleted-1);
+
+    const totalDoneToday = dayDoneCount(t);
+    if(nowDone && totalDoneToday===1){
+      const last = state.profile.lastCompletionDate;
+      if(last===yesterdayStr()) state.profile.streak += 1;
+      else if(last!==t) state.profile.streak = 1;
+      state.profile.lastCompletionDate = t;
+      state.profile.longestStreak = Math.max(state.profile.longestStreak, state.profile.streak);
+      maybeAwardFreeze();
+    } else if(!nowDone && totalDoneToday===0 && state.profile.lastCompletionDate===t){
+      state.profile.streak = Math.max(0, state.profile.streak-1);
+      state.profile.lastCompletionDate = null;
+    }
+
+    const newLevel = levelFromXP(state.profile.totalXP).level;
+    const newAchievements = checkAchievements();
+
+    if(nowDone) showToast(`+${DIFF_XP[diff]} XP`);
+    saveState();
+    render();
+
+    if(newLevel > prevLevel){
+      setTimeout(()=>showLevelUp(newLevel), 300);
+    } else if(newAchievements.length){
+      setTimeout(()=>showAchievementUnlock(newAchievements[0]), 300);
+    }
+  }
+
+  function addTask(cat, text, difficulty){
+    if(!text.trim()) return;
+    const id = uid();
+    state.templates.push({id, category:cat, text:text.trim(), difficulty});
+    state.stats.tasksAdded += 1;
+    const newly = checkAchievements();
+    saveState(); render();
+    if(newly.length) setTimeout(()=>showAchievementUnlock(newly[0]), 300);
+  }
+  function deleteTemplate(id){ state.templates = state.templates.filter(x=>x.id!==id); saveState(); render(); }
+  function deleteCustom(id){ const t=todayStr(); state.logs[t].custom = state.logs[t].custom.filter(x=>x.id!==id); saveState(); render(); }
+
+  function hexPoints(cx,cy,r){
+    const pts=[];
+    for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i-90); pts.push((cx+r*Math.cos(a)).toFixed(2)+','+(cy+r*Math.sin(a)).toFixed(2)); }
+    return pts.join(' ');
+  }
+
+  /* ---------- AVATAR SVG BUILDER ---------- */
+  function buildAvatarSVG(av, opts){
+    opts = opts||{};
+    const size = opts.size||100;
+    let hairShape = '';
+    if(av.hair==='short') hairShape = `<path d="M18 42 Q20 14 50 14 Q80 14 82 42 L82 30 Q80 20 50 20 Q20 20 18 30 Z" fill="${av.hairColor}"/>`;
+    else if(av.hair==='long') hairShape = `<path d="M15 40 Q16 12 50 12 Q84 12 85 40 L85 70 Q78 55 78 40 Q78 22 50 22 Q22 22 22 40 Q22 55 15 70 Z" fill="${av.hairColor}"/>`;
+    else if(av.hair==='mohawk') hairShape = `<rect x="42" y="6" width="16" height="30" rx="6" fill="${av.hairColor}"/>`;
+    else if(av.hair==='curly') hairShape = `<circle cx="28" cy="26" r="10" fill="${av.hairColor}"/><circle cx="42" cy="16" r="11" fill="${av.hairColor}"/><circle cx="58" cy="16" r="11" fill="${av.hairColor}"/><circle cx="72" cy="26" r="10" fill="${av.hairColor}"/>`;
+
+    let eyeShape = '';
+    if(av.eyes==='normal') eyeShape = `<circle cx="38" cy="48" r="3.4" fill="#1a1a1a"/><circle cx="62" cy="48" r="3.4" fill="#1a1a1a"/>`;
+    else if(av.eyes==='happy') eyeShape = `<path d="M33 48 Q38 43 43 48" stroke="#1a1a1a" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M57 48 Q62 43 67 48" stroke="#1a1a1a" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+    else if(av.eyes==='cool') eyeShape = `<rect x="30" y="44" width="17" height="8" rx="2" fill="#1a1a1a"/><rect x="53" y="44" width="17" height="8" rx="2" fill="#1a1a1a"/><rect x="47" y="46" width="6" height="3" fill="#1a1a1a"/>`;
+
+    let mouthShape = '';
+    if(av.mouth==='smile') mouthShape = `<path d="M40 62 Q50 70 60 62" stroke="#5c3020" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+    else if(av.mouth==='grin') mouthShape = `<path d="M38 61 Q50 72 62 61 Q50 66 38 61 Z" fill="#5c3020"/>`;
+    else if(av.mouth==='neutral') mouthShape = `<line x1="42" y1="64" x2="58" y2="64" stroke="#5c3020" stroke-width="3" stroke-linecap="round"/>`;
+
+    let accShape = '';
+    if(av.accessory==='glasses') accShape = `<circle cx="38" cy="48" r="9" fill="none" stroke="#222" stroke-width="2.5"/><circle cx="62" cy="48" r="9" fill="none" stroke="#222" stroke-width="2.5"/><line x1="47" y1="48" x2="53" y2="48" stroke="#222" stroke-width="2.5"/>`;
+    else if(av.accessory==='headphones') accShape = `<path d="M22 46 Q22 14 50 14 Q78 14 78 46" stroke="#333" stroke-width="5" fill="none"/><rect x="15" y="42" width="12" height="20" rx="5" fill="#7c5cff"/><rect x="73" y="42" width="12" height="20" rx="5" fill="#7c5cff"/>`;
+    else if(av.accessory==='crown') accShape = `<path d="M28 20 L36 34 L50 16 L64 34 L72 20 L70 38 L30 38 Z" fill="var(--gold)" stroke="#7a5a10" stroke-width="1.5"/>`;
+
+    return `<svg viewBox="0 0 100 100" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="52" r="40" fill="${av.skin}"/>
+      <path d="M20 92 Q50 74 80 92 L80 100 L20 100 Z" fill="${av.outfit}"/>
+      ${eyeShape}${mouthShape}${av.hair!=='bald'?hairShape:''}${accShape}
+    </svg>`;
+  }
+
+  /* ---------- MASCOT (little fox) ---------- */
+  function mascotSVG(){
+    return `<svg class="mascot-svg" viewBox="0 0 100 100">
+      <path d="M20 55 L10 20 L35 40 Z" fill="#e8834c"/>
+      <path d="M80 55 L90 20 L65 40 Z" fill="#e8834c"/>
+      <ellipse cx="50" cy="58" rx="34" ry="30" fill="#f4a261"/>
+      <ellipse cx="50" cy="68" rx="16" ry="13" fill="#fff6ec"/>
+      <circle cx="38" cy="52" r="4" fill="#241c14"/>
+      <circle cx="62" cy="52" r="4" fill="#241c14"/>
+      <path d="M46 62 Q50 66 54 62" stroke="#241c14" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <circle cx="50" cy="58" r="2.5" fill="#241c14"/>
+    </svg>`;
+  }
+  function mascotMessage(){
+    const t = todayStr();
+    const done = dayDoneCount(t);
+    const hour = new Date().getHours();
+    let pool;
+    if(state.profile.streak>=10) pool = MASCOT_LINES.streak_high;
+    else if(done===0 && hour>=17) pool = MASCOT_LINES.zero_late;
+    else if(done===0) pool = MASCOT_LINES.zero_early;
+    else if(done>=3) pool = MASCOT_LINES.day_cleared;
+    else pool = MASCOT_LINES.some_done;
+    return pool[mascotLineIdx % pool.length];
+  }
+
+  /* ---------- MODALS ---------- */
+  function closeModal(){
+    const el = document.getElementById('modalRoot');
+    if(el) el.remove();
+  }
+  function openAvatarModal(){
+    const av = state.profile.avatar;
+    const rankIdx = rankIndexForLevel(levelFromXP(state.profile.totalXP).level);
+    const root = document.createElement('div');
+    root.id='modalRoot'; root.className='modal-overlay';
+    root.innerHTML = `
+      <div class="modal">
+        <button class="modal-close" id="closeAvatarModal">✕</button>
+        <h2>Customize Avatar</h2>
+        <div class="avatar-preview" id="avatarPreview">${buildAvatarSVG(av,{size:114})}</div>
+
+        <div class="field-label">Skin tone</div>
+        <div class="swatch-row" data-field="skin">
+          ${AVATAR_OPTS.skin.map(c=>`<div class="swatch color-swatch ${av.skin===c?'selected':''}" style="background:${c}" data-value="${c}"></div>`).join('')}
+        </div>
+        <div class="field-label">Hair style</div>
+        <div class="swatch-row" data-field="hair">
+          ${AVATAR_OPTS.hair.map(h=>`<div class="swatch ${av.hair===h?'selected':''}" data-value="${h}">${h==='bald'?'👤':h[0].toUpperCase()}</div>`).join('')}
+        </div>
+        <div class="field-label">Hair color</div>
+        <div class="swatch-row" data-field="hairColor">
+          ${AVATAR_OPTS.hairColor.map(c=>`<div class="swatch color-swatch ${av.hairColor===c?'selected':''}" style="background:${c}" data-value="${c}"></div>`).join('')}
+        </div>
+        <div class="field-label">Eyes</div>
+        <div class="swatch-row" data-field="eyes">
+          ${AVATAR_OPTS.eyes.map(e=>`<div class="swatch ${av.eyes===e?'selected':''}" data-value="${e}">${e==='normal'?'👀':e==='happy'?'😊':'😎'}</div>`).join('')}
+        </div>
+        <div class="field-label">Mouth</div>
+        <div class="swatch-row" data-field="mouth">
+          ${AVATAR_OPTS.mouth.map(m=>`<div class="swatch ${av.mouth===m?'selected':''}" data-value="${m}">${m==='smile'?'🙂':m==='grin'?'😁':'😐'}</div>`).join('')}
+        </div>
+        <div class="field-label">Outfit color</div>
+        <div class="swatch-row" data-field="outfit">
+          ${AVATAR_OPTS.outfit.map(c=>`<div class="swatch color-swatch ${av.outfit===c?'selected':''}" style="background:${c}" data-value="${c}"></div>`).join('')}
+        </div>
+        <div class="field-label">Accessory <span style="opacity:.6;font-weight:400;">(unlocks with rank)</span></div>
+        <div class="swatch-row" data-field="accessory">
+          ${AVATAR_OPTS.accessory.map(a=>{
+            const locked = rankIdx < ACCESSORY_UNLOCK[a];
+            return `<div class="swatch ${av.accessory===a?'selected':''} ${locked?'locked':''}" data-value="${a}" data-locked="${locked}">${a==='none'?'—':a==='glasses'?'🕶️':a==='headphones'?'🎧':'👑'}</div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    document.body.appendChild(root);
+    document.getElementById('closeAvatarModal').addEventListener('click', closeModal);
+    root.addEventListener('click', (e)=>{ if(e.target===root) closeModal(); });
+
+    root.querySelectorAll('.swatch-row').forEach(row=>{
+      row.addEventListener('click', (e)=>{
+        const sw = e.target.closest('.swatch');
+        if(!sw) return;
+        if(sw.dataset.locked==='true'){ showToast('🔒 Reach a higher rank to unlock'); return; }
+        const field = row.dataset.field;
+        av[field] = sw.dataset.value;
+        saveState();
+        document.getElementById('avatarPreview').innerHTML = buildAvatarSVG(av,{size:114});
+        row.querySelectorAll('.swatch').forEach(s=>s.classList.remove('selected'));
+        sw.classList.add('selected');
+        render();
+      });
+    });
+  }
+
+  function openReminderModal(){
+    const root = document.createElement('div');
+    root.id='modalRoot'; root.className='modal-overlay';
+    root.innerHTML = `
+      <div class="modal">
+        <button class="modal-close" id="closeReminderModal">✕</button>
+        <h2>Daily Reminder</h2>
+        <div class="field-label">Remind me at</div>
+        <input type="time" class="time-input" id="reminderTimeInput" value="${state.profile.reminderTime}">
+        <button class="modal-btn" id="enableReminderBtn">${state.profile.remindersEnabled ? 'Reminders On ✓' : 'Turn On Reminders'}</button>
+        <div class="reminder-status">
+          Works while this tab stays open in your browser — it'll nudge you here if you haven't logged a task by your set time.
+          For a real push notification on your phone that works even when the app is closed, host this on GitHub Pages and I can add a proper Notification setup.
+        </div>
+      </div>`;
+    document.body.appendChild(root);
+    document.getElementById('closeReminderModal').addEventListener('click', closeModal);
+    root.addEventListener('click', (e)=>{ if(e.target===root) closeModal(); });
+    document.getElementById('reminderTimeInput').addEventListener('change', (e)=>{
+      state.profile.reminderTime = e.target.value; saveState();
+    });
+    document.getElementById('enableReminderBtn').addEventListener('click', async ()=>{
+      state.profile.remindersEnabled = true;
+      if(window.Notification && Notification.permission!=='granted'){
+        try{ await Notification.requestPermission(); }catch(e){}
+      }
+      saveState(); closeModal(); render();
+      showToast('🔔 Reminders enabled');
+    });
+  }
+
+  function showLevelUp(level){
+    fireConfetti();
+    const rank = rankForLevel(level);
+    const root = document.createElement('div');
+    root.className='levelup-overlay';
+    root.innerHTML = `<div class="levelup-card">
+      <div class="big">LEVEL ${level}</div>
+      <div class="sub" style="color:${rank.color}">${rank.name} Rank</div>
+      <button class="modal-btn" style="width:auto;padding:10px 28px;margin-top:22px;" id="levelUpClose">Nice!</button>
+    </div>`;
+    document.body.appendChild(root);
+    document.getElementById('levelUpClose').addEventListener('click', ()=>root.remove());
+  }
+  function showAchievementUnlock(a){
+    fireConfetti();
+    const root = document.createElement('div');
+    root.className='levelup-overlay';
+    root.innerHTML = `<div class="levelup-card">
+      <div style="font-size:50px;">${a.icon}</div>
+      <div class="big" style="font-size:26px;">${a.name}</div>
+      <div class="sub">${a.desc}</div>
+      <button class="modal-btn" style="width:auto;padding:10px 28px;margin-top:22px;" id="achClose">Nice!</button>
+    </div>`;
+    document.body.appendChild(root);
+    document.getElementById('achClose').addEventListener('click', ()=>root.remove());
+  }
+
+  /* ---------- RENDER ---------- */
+  function shouldShowBanner(){
+    const t = todayStr();
+    if(state.profile.bannerDismissedDate===t) return false;
+    const hour = new Date().getHours();
+    const done = dayDoneCount(t);
+    return done===0 && hour>=17;
+  }
+
+  function render(){
+    ensureToday();
+    checkStreakOnLoad();
+    const { level, into, need } = levelFromXP(state.profile.totalXP);
+    const rank = rankForLevel(level);
+    const nrank = nextRank(level);
+    const pct = Math.min(100, Math.round((into/need)*100));
+
+    const heatCells = [];
+    for(let i=-6;i<=0;i++){
+      const ds = dateStrOffset(i);
+      const c = dayDoneCount(ds);
+      const label = new Date(ds).toLocaleDateString('en-US',{weekday:'narrow'});
+      heatCells.push(`<div class="heat-cell ${c>0?'active':''} ${i===0?'today':''}">${c>0?'✓':label}</div>`);
+    }
+
+    const app = document.getElementById('app');
+    app.innerHTML = `
+      ${shouldShowBanner() ? `
+      <div class="banner" id="reminderBanner">
+        <div class="banner-icon">🔔</div>
+        <div class="banner-text">${state.profile.streak>0 ? `Your ${state.profile.streak}-day streak is waiting — do one quick task before today ends!` : `Haven't started today yet — pick one easy task to get going.`}</div>
+        <button class="banner-close" id="dismissBanner">✕</button>
+      </div>` : ''}
+
+      <div class="header">
+        <div class="header-top">
+          <button class="avatar-btn" id="avatarBtn">${buildAvatarSVG(state.profile.avatar,{size:56})}</button>
+          <div class="id-block">
+            <div class="rank-name" style="color:${rank.color}">${rank.name}</div>
+            <div class="rank-tag">Level ${level} · ${nrank ? (nrank.min-level)+' to '+nrank.name : 'Max Rank'}</div>
+          </div>
+          <div class="header-actions">
+            <div class="icon-btn" id="reminderBtn">🔔${state.profile.remindersEnabled?'':''}</div>
+            <div class="icon-btn" id="awardsBtn">🏅</div>
+          </div>
+        </div>
+        <div class="streak-row">
+          <div class="streak">🔥 ${state.profile.streak} day streak</div>
+          <div class="freeze">❄️ ${state.profile.streakFreezes} freeze${state.profile.streakFreezes===1?'':'s'}</div>
+        </div>
+        <div class="xp-row">
+          <div class="xp-labels"><span>${into} / ${need} XP</span><span>${state.profile.totalXP} total</span></div>
+          <div class="xp-track"><div class="xp-fill" style="width:${pct}%"></div></div>
+        </div>
+        <div class="heatmap">${heatCells.join('')}</div>
+      </div>
+
+      <div class="mascot-bar" id="mascotBar">
+        ${mascotSVG()}
+        <div class="speech">${mascotMessage()}</div>
+      </div>
+
+      <div class="tabs" id="tabs">
+        ${CATEGORIES.map(c=>`<div class="tab ${c.id===activeCat?'active':''}" data-cat="${c.id}">${c.icon} ${c.label}</div>`).join('')}
+        <div class="tab awards ${activeCat==='awards'?'active':''}" data-cat="awards">🏅 Awards</div>
+      </div>
+
+      <div id="taskArea"></div>
+    `;
+
+    document.querySelectorAll('.tab').forEach(el=>{
+      el.addEventListener('click', ()=>{ activeCat = el.dataset.cat; render(); });
+    });
+    document.getElementById('avatarBtn').addEventListener('click', openAvatarModal);
+    document.getElementById('reminderBtn').addEventListener('click', openReminderModal);
+    document.getElementById('awardsBtn').addEventListener('click', ()=>{ activeCat='awards'; render(); });
+    const dismissBtn = document.getElementById('dismissBanner');
+    if(dismissBtn) dismissBtn.addEventListener('click', ()=>{
+      state.profile.bannerDismissedDate = todayStr(); saveState(); render();
+    });
+    document.getElementById('mascotBar').addEventListener('click', ()=>{ mascotLineIdx++; render(); });
+
+    if(activeCat==='awards') renderAwards();
+    else renderTasks();
+  }
+
+  function renderAwards(){
+    const area = document.getElementById('taskArea');
+    area.innerHTML = `
+      <div class="cat-header">
+        <div class="cat-title">🏅 Achievements</div>
+        <div class="cat-progress">${state.profile.achievements.length}/${ACHIEVEMENTS.length}</div>
+      </div>
+      <div class="awards-grid">
+        ${ACHIEVEMENTS.map(a=>{
+          const unlocked = state.profile.achievements.includes(a.id);
+          return `<div class="award ${unlocked?'unlocked':''}">
+            <div class="award-icon">${a.icon}</div>
+            <div class="award-name">${a.name}</div>
+            <div class="award-desc">${a.desc}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="reset-link" id="resetLink">reset all data</div>
+    `;
+    document.getElementById('resetLink').addEventListener('click', async ()=>{
+      if(confirm('Reset all progress? This cannot be undone.')){
+        state = defaultState(); await saveState(); render();
+      }
+    });
+  }
+
+  function renderTasks(){
+    const cat = CATEGORIES.find(c=>c.id===activeCat);
+    const tasks = allTasksForToday(activeCat);
+    const doneCount = tasks.filter(t=>t.done).length;
+    const area = document.getElementById('taskArea');
+
+    area.innerHTML = `
+      <div class="cat-header">
+        <div class="cat-title">${cat.icon} ${cat.label} — Today</div>
+        <div class="cat-progress">${doneCount}/${tasks.length} done</div>
+      </div>
+      <div id="taskList">
+        ${tasks.length ? tasks.map(t=>`
+          <div class="task ${t.done?'done':''}">
+            <div class="check ${t.done?'done':''}" data-id="${t.id}" data-custom="${t.custom}">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#0d0f16" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="task-text">${escapeHtml(t.text)}</div>
+            <div class="diff-tag diff-${t.difficulty}">${t.difficulty.toUpperCase()} · ${DIFF_XP[t.difficulty]}XP</div>
+            <button class="task-del" data-del="${t.id}" data-delcustom="${t.custom}">✕</button>
+          </div>
+        `).join('') : `<div class="empty-state">No tasks in this category yet.<br>Add one below to start earning XP.</div>`}
+      </div>
+      <div class="add-row">
+        <input class="add-input" id="newTaskInput" placeholder="Add a ${cat.label.toLowerCase()} task…" />
+        <select class="diff-select" id="newTaskDiff">
+          <option value="easy">Easy · 10</option>
+          <option value="medium" selected>Medium · 20</option>
+          <option value="hard">Hard · 35</option>
+        </select>
+        <button class="add-btn" id="addTaskBtn">+</button>
+      </div>
+      <div class="reset-link" id="resetLink">reset all data</div>
+    `;
+
+    area.querySelectorAll('.check').forEach(el=>{
+      el.addEventListener('click', ()=>toggleTask(activeCat, el.dataset.id, el.dataset.custom==='true'));
+    });
+    area.querySelectorAll('[data-del]').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        if(el.dataset.delcustom==='true') deleteCustom(el.dataset.del);
+        else deleteTemplate(el.dataset.del);
+      });
+    });
+    const addBtn = document.getElementById('addTaskBtn');
+    const input = document.getElementById('newTaskInput');
+    addBtn.addEventListener('click', ()=>{
+      const diff = document.getElementById('newTaskDiff').value;
+      addTask(activeCat, input.value, diff);
+    });
+    input.addEventListener('keydown', (e)=>{
+      if(e.key==='Enter'){ const diff=document.getElementById('newTaskDiff').value; addTask(activeCat, input.value, diff); }
+    });
+    document.getElementById('resetLink').addEventListener('click', async ()=>{
+      if(confirm('Reset all progress? This cannot be undone.')){
+        state = defaultState(); await saveState(); render();
+      }
+    });
+  }
+
+  function escapeHtml(str){ const d=document.createElement('div'); d.textContent=str; return d.innerHTML; }
+
+  function startReminderLoop(){
+    setInterval(()=>{
+      if(!state || !state.profile.remindersEnabled) return;
+      const now = new Date();
+      const cur = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+      if(cur===state.profile.reminderTime && dayDoneCount(todayStr())===0){
+        if(window.Notification && Notification.permission==='granted'){
+          new Notification('LifeQuest', { body: "You haven't logged a quest today — keep your streak alive!" });
+        } else {
+          showToast('🔔 Reminder: log a quest today!');
+        }
+      }
+    }, 30000);
+  }
+
+  async function init(){
+    state = await loadState();
+    ensureToday();
+    await saveState();
+    render();
+    startReminderLoop();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
